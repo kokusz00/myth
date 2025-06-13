@@ -2,58 +2,118 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Callouts Display</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      color: #222;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .callouts-container {
+      display: flex;
+      flex: 1;
+      gap: 20px;
+      overflow: hidden;
+    }
+    .active-callouts, .waiting-callouts {
+      flex: 1;
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      overflow-y: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .active-callouts h2, .waiting-callouts h2 {
+      margin-top: 0;
+      border-bottom: 2px solid #333;
+      padding-bottom: 5px;
+    }
+    .callout {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background: #e7f3ff;
+      box-shadow: inset 0 0 5px #b0d4ff;
+    }
+    .callout strong {
+      font-size: 1.2em;
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Active Callouts</h1>
-  </div>
+
+  <h1>Callouts Display</h1>
+
   <div class="callouts-container">
-    <div class="active-callouts"></div>
-    <div class="waiting-callouts"></div>
+    <div class="active-callouts">
+      <h2>Active Callouts</h2>
+    </div>
+    <div class="waiting-callouts">
+      <h2>Waiting Callouts</h2>
+    </div>
   </div>
+
+  <!-- Audio element for the callout sound -->
+  <audio id="calloutSound" preload="auto">
+    <source src="sounds/callout.mp3" type="audio/mpeg" />
+  </audio>
 
   <script src="shared.js"></script>
-<script src="shared.js"></script>
-<script>
-  let previousActiveIds = [];
+  <script>
+    // Keep track of previously active callouts to detect new ones
+    let previousActiveIds = [];
 
-  function renderCallouts() {
-    const activeContainer = document.querySelector(".active-callouts");
-    const waitingContainer = document.querySelector(".waiting-callouts");
-    const calloutSound = document.getElementById("calloutSound");
+    function renderCallouts() {
+      const activeContainer = document.querySelector(".active-callouts");
+      const waitingContainer = document.querySelector(".waiting-callouts");
+      const calloutSound = document.getElementById("calloutSound");
 
-    if (calloutSound && !calloutSound.src.includes('callout.mp3')) {
-      calloutSound.src = "sounds/callout.mp3";
+      // getCallouts returns { activeCallouts: [], waitingCallouts: [] }
+      const { activeCallouts, waitingCallouts } = getCallouts();
+
+      // Detect new callouts that appeared in active but were not before
+      const currentActiveIds = activeCallouts.map(c => c.id);
+      const newActive = currentActiveIds.filter(id => !previousActiveIds.includes(id));
+      if (newActive.length > 0) {
+        // Play sound ONCE per new active callout appearance
+        calloutSound.currentTime = 0;
+        calloutSound.play().catch(() => {});
+      }
+      previousActiveIds = currentActiveIds;
+
+      // Render active callouts
+      activeContainer.innerHTML = '<h2>Active Callouts</h2>' + 
+        activeCallouts.map(c => `
+          <div class="callout">
+            <strong>${c.user}</strong>
+            ${c.channel} - ${c.time}
+          </div>
+        `).join('');
+
+      // Render waiting callouts
+      waitingContainer.innerHTML = '<h2>Waiting Callouts</h2>' + 
+        waitingCallouts.map(c => `
+          <div class="callout">
+            <strong>${c.user}</strong>
+            ${c.channel} - ${c.time}
+          </div>
+        `).join('');
     }
 
-    const { activeCallouts, waitingCallouts } = getCallouts();
-
-    const newIds = activeCallouts.map(c => c.id);
-    const newActive = newIds.filter(id => !previousActiveIds.includes(id));
-    if (newActive.length > 0 && calloutSound) {
-      calloutSound.play().catch(() => {});
-    }
-    previousActiveIds = newIds;
-
-    activeContainer.innerHTML = '<h2>Active</h2>' +
-      activeCallouts.map(c => `<div class="callout">
-        <strong>${c.user}</strong><br>
-        ${c.channel} - ${c.time}
-      </div>`).join('');
-
-    waitingContainer.innerHTML = '<h2>Waiting</h2>' +
-      waitingCallouts.map(c => `<div class="callout">
-        <strong>${c.user}</strong><br>
-        ${c.channel} - ${c.time}
-      </div>`).join('');
-  }
-
-  setInterval(renderCallouts, 500);
-  renderCallouts();
-</script>
-
+    setInterval(renderCallouts, 500);
+    renderCallouts();
+  </script>
 </body>
 </html>
