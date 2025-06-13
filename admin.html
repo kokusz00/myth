@@ -1,122 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Callout Admin</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #121212;
-      color: white;
-      padding: 2rem;
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    form {
-      max-width: 500px;
-      margin: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    input, select, button {
-      padding: 0.8rem;
-      font-size: 1rem;
-      background: #1e1e1e;
-      color: white;
-      border: 1px solid #333;
-      border-radius: 5px;
-    }
-
-    .list {
-      margin-top: 2rem;
-      max-width: 600px;
-      margin-inline: auto;
-    }
-
-    .callout-item {
-      background: #222;
-      padding: 1rem;
-      margin: 0.5rem 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid #444;
-      border-radius: 8px;
-    }
-
-    .callout-item span {
-      font-weight: bold;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <h1>Callout Admin Panel</h1>
-  <form id="calloutForm">
-    <input type="text" id="name" placeholder="User Name" required />
-    <input type="text" id="location" placeholder="Voice Channel" required />
-    <input type="text" id="time" placeholder="Time (e.g. 14:30)" required />
-    <select id="status">
-      <option value="waiting">Waiting</option>
-      <option value="active">Active</option>
-    </select>
-    <button type="submit">Add Callout</button>
-  </form>
+<body class="dark">
+  <div class="admin-container">
+    <h1>Callout Admin Panel</h1>
 
-  <div class="list" id="currentCallouts"></div>
+    <div class="form">
+      <input type="text" id="user" placeholder="User" />
+      <input type="text" id="channel" placeholder="Voice Channel" />
+      <input type="text" id="time" placeholder="Time" />
+      <select id="target">
+        <option value="waiting">Send to Waiting</option>
+        <option value="active">Send to Active</option>
+      </select>
+      <button onclick="addCallout()">Callout</button>
+    </div>
+
+    <div class="lists">
+      <div>
+        <h2>Active Callouts</h2>
+        <ul id="activeList"></ul>
+      </div>
+      <div>
+        <h2>Waiting Callouts</h2>
+        <ul id="waitingList"></ul>
+      </div>
+    </div>
+  </div>
 
   <script src="shared.js"></script>
   <script>
-    const form = document.getElementById('calloutForm');
-    const listDiv = document.getElementById('currentCallouts');
+    const activeList = document.getElementById("activeList");
+    const waitingList = document.getElementById("waitingList");
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const location = document.getElementById('location').value;
-      const time = document.getElementById('time').value;
-      const status = document.getElementById('status').value;
-      addCallout(name, location, time, status);
-      form.reset();
-      renderList();
-    });
+    function renderLists() {
+      const { activeCallouts, waitingCallouts } = getCallouts();
 
-    function renderList() {
-      const callouts = getCallouts();
-      listDiv.innerHTML = '';
-      callouts.forEach((c, i) => {
-        const div = document.createElement('div');
-        div.className = 'callout-item';
-        div.innerHTML = `
-          <span>${c.name} - ${c.location} @ ${c.time || '-'}</span>
-          <div>
-            <button onclick="toggle(${i})">Move to ${c.status === 'active' ? 'Waiting' : 'Active'}</button>
-            <button onclick="remove(${i})">Remove</button>
-          </div>
-        `;
-        listDiv.appendChild(div);
+      activeList.innerHTML = "";
+      activeCallouts.forEach((c, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          ${c.user} - ${c.channel} - ${c.time}
+          <button onclick="moveCallout('active', ${i}, 'waiting')">⏩</button>
+          <button onclick="removeCallout('active', ${i})">❌</button>`;
+        activeList.appendChild(li);
+      });
+
+      waitingList.innerHTML = "";
+      waitingCallouts.forEach((c, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          ${c.user} - ${c.channel} - ${c.time}
+          <button onclick="moveCallout('waiting', ${i}, 'active')">⏩</button>
+          <button onclick="removeCallout('waiting', ${i})">❌</button>`;
+        waitingList.appendChild(li);
       });
     }
 
-    function toggle(index) {
-      const callouts = getCallouts();
-      const current = callouts[index];
-      const newStatus = current.status === 'active' ? 'waiting' : 'active';
-      updateCalloutStatus(index, newStatus);
-      renderList();
+    function addCallout() {
+      const user = document.getElementById("user").value;
+      const channel = document.getElementById("channel").value;
+      const time = document.getElementById("time").value;
+      const target = document.getElementById("target").value;
+
+      if (!user || !channel || !time) return alert("Please fill all fields");
+
+      const callouts = JSON.parse(localStorage.getItem("callouts") || "{}");
+      callouts[target] = callouts[target] || [];
+      callouts[target].push({ id: Date.now(), user, channel, time });
+      localStorage.setItem("callouts", JSON.stringify(callouts));
+      renderLists();
     }
 
-    function remove(index) {
-      removeCallout(index);
-      renderList();
+    function removeCallout(type, index) {
+      const callouts = JSON.parse(localStorage.getItem("callouts") || "{}");
+      callouts[type].splice(index, 1);
+      localStorage.setItem("callouts", JSON.stringify(callouts));
+      renderLists();
     }
 
-    renderList();
+    function moveCallout(from, index, to) {
+      const callouts = JSON.parse(localStorage.getItem("callouts") || "{}");
+      const [moved] = callouts[from].splice(index, 1);
+      callouts[to] = callouts[to] || [];
+      callouts[to].push(moved);
+      localStorage.setItem("callouts", JSON.stringify(callouts));
+      renderLists();
+    }
+
+    renderLists();
+    setInterval(renderLists, 1000);
   </script>
 </body>
 </html>
