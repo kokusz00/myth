@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Callout Admin</title>
   <style>
     body {
       font-family: sans-serif;
-      background: #f5f5f5;
+      background: #121212;
+      color: white;
       padding: 2rem;
     }
 
@@ -23,9 +24,13 @@
       gap: 1rem;
     }
 
-    input, button {
+    input, select, button {
       padding: 0.8rem;
       font-size: 1rem;
+      background: #1e1e1e;
+      color: white;
+      border: 1px solid #333;
+      border-radius: 5px;
     }
 
     .list {
@@ -35,13 +40,13 @@
     }
 
     .callout-item {
-      background: #fff;
+      background: #222;
       padding: 1rem;
       margin: 0.5rem 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border: 1px solid #ccc;
+      border: 1px solid #444;
       border-radius: 8px;
     }
 
@@ -51,12 +56,16 @@
   </style>
 </head>
 <body>
-  <h1>📢 Callout Admin Panel</h1>
+  <h1>Callout Admin Panel</h1>
   <form id="calloutForm">
     <input type="text" id="name" placeholder="User Name" required />
     <input type="text" id="location" placeholder="Voice Channel" required />
     <input type="text" id="time" placeholder="Time (e.g. 14:30)" required />
-    <button type="submit">Call Out</button>
+    <select id="status">
+      <option value="waiting">Waiting</option>
+      <option value="active">Active</option>
+    </select>
+    <button type="submit">Add Callout</button>
   </form>
 
   <div class="list" id="currentCallouts"></div>
@@ -71,7 +80,8 @@
       const name = document.getElementById('name').value;
       const location = document.getElementById('location').value;
       const time = document.getElementById('time').value;
-      addCallout(name, location, time);
+      const status = document.getElementById('status').value;
+      addCallout(name, location, time, status);
       form.reset();
       renderList();
     });
@@ -83,11 +93,22 @@
         const div = document.createElement('div');
         div.className = 'callout-item';
         div.innerHTML = `
-          <span>${c.name} → ${c.location} @ ${c.time}</span>
-          <button onclick="remove(${i})">Remove</button>
+          <span>${c.name} - ${c.location} @ ${c.time || '-'}</span>
+          <div>
+            <button onclick="toggle(${i})">Move to ${c.status === 'active' ? 'Waiting' : 'Active'}</button>
+            <button onclick="remove(${i})">Remove</button>
+          </div>
         `;
         listDiv.appendChild(div);
       });
+    }
+
+    function toggle(index) {
+      const callouts = getCallouts();
+      const current = callouts[index];
+      const newStatus = current.status === 'active' ? 'waiting' : 'active';
+      updateCalloutStatus(index, newStatus);
+      renderList();
     }
 
     function remove(index) {
@@ -99,4 +120,3 @@
   </script>
 </body>
 </html>
-
