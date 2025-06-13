@@ -1,94 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Callout Display</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background: #111;
-      color: white;
-      display: flex;
-      flex-direction: row;
-      height: 100vh;
-    }
-
-    .section {
-      flex: 1;
-      padding: 2rem;
-    }
-
-    .section h1 {
-      text-align: center;
-      font-size: 2em;
-      margin-bottom: 1rem;
-    }
-
-    .callout {
-      background: #222;
-      border: 2px solid #444;
-      border-radius: 1rem;
-      padding: 1rem 1.5rem;
-      margin: 1rem 0;
-      font-size: 1.2em;
-      animation: fadeIn 0.5s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Callouts Display</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="section" id="activeSection">
+  <div class="header">
     <h1>Active Callouts</h1>
-    <div id="callouts"></div>
+  </div>
+  <div class="callouts-container">
+    <div class="active-callouts"></div>
+    <div class="waiting-callouts"></div>
   </div>
 
-  <div class="section" id="waitingSection">
-    <h1>Waiting List</h1>
-    <div id="waitingList"></div>
-  </div>
+  <audio id="calloutSound" preload="auto">
+    <source src="sounds/callout.mp3" type="audio/mpeg" />
+  </audio>
 
   <script src="shared.js"></script>
   <script>
-    const calloutsContainer = document.getElementById('callouts');
-    const waitingContainer = document.getElementById('waitingList');
+    let previousActiveIds = [];
 
-    function render() {
-      const callouts = getCallouts();
-      calloutsContainer.innerHTML = '';
-      waitingContainer.innerHTML = '';
+    function renderCallouts() {
+      const activeContainer = document.querySelector(".active-callouts");
+      const waitingContainer = document.querySelector(".waiting-callouts");
+      const calloutSound = document.getElementById("calloutSound");
 
-      callouts.forEach((c, index) => {
-        const div = document.createElement('div');
-        div.className = 'callout';
-        div.innerHTML = `
-          <strong>User:</strong> ${c.name}<br>
-          <strong>Voice Channel:</strong> ${c.location}<br>
-          <strong>Time:</strong> ${c.time || '-'}
-        `;
-        if (c.status === 'active') {
-          calloutsContainer.appendChild(div);
-        } else {
-          waitingContainer.appendChild(div);
-        }
-      });
+      const { activeCallouts, waitingCallouts } = getCallouts();
+
+      const newIds = activeCallouts.map(c => c.id);
+      const newActive = newIds.filter(id => !previousActiveIds.includes(id));
+      if (newActive.length > 0) {
+        calloutSound.play().catch(() => {});
+      }
+      previousActiveIds = newIds;
+
+      activeContainer.innerHTML = '<h2>Active</h2>' +
+        activeCallouts.map(c => `
+          <div class="callout">
+            <strong>${c.user}</strong><br>
+            ${c.channel} - ${c.time}
+          </div>`).join('');
+
+      waitingContainer.innerHTML = '<h2>Waiting</h2>' +
+        waitingCallouts.map(c => `
+          <div class="callout">
+            <strong>${c.user}</strong><br>
+            ${c.channel} - ${c.time}
+          </div>`).join('');
     }
 
-    let lastUpdate = 0;
-    setInterval(() => {
-      const updated = parseInt(localStorage.getItem('calloutUpdated') || '0');
-      if (updated > lastUpdate) {
-        lastUpdate = updated;
-        render();
-      }
-    }, 500);
-
-    render();
+    setInterval(renderCallouts, 500);
+    renderCallouts();
   </script>
 </body>
 </html>
