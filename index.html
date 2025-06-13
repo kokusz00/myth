@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Callout Display</title>
   <style>
     body {
@@ -11,41 +11,29 @@
       background: #111;
       color: white;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
+      flex-direction: row;
       height: 100vh;
-      padding: 2rem;
-    }
-
-    h1, h2 {
-      text-align: center;
-      margin: 0.5rem 0;
     }
 
     .section {
-      width: 100%;
-      max-width: 900px;
-      margin-top: 2rem;
+      flex: 1;
+      padding: 2rem;
     }
 
-    .callout, .waiting {
+    .section h1 {
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 1rem;
+    }
+
+    .callout {
       background: #222;
       border: 2px solid #444;
       border-radius: 1rem;
-      padding: 1.2rem 2rem;
+      padding: 1rem 1.5rem;
       margin: 1rem 0;
-      font-size: 1.5em;
+      font-size: 1.2em;
       animation: fadeIn 0.5s ease;
-    }
-
-    .callout strong {
-      display: block;
-      color: #00ffcc;
-    }
-
-    .waiting {
-      opacity: 0.5;
     }
 
     @keyframes fadeIn {
@@ -55,11 +43,15 @@
   </style>
 </head>
 <body>
-  <h1>🔔 Active Callouts</h1>
-  <div class="section" id="callouts"></div>
+  <div class="section" id="activeSection">
+    <h1>Active Callouts</h1>
+    <div id="callouts"></div>
+  </div>
 
-  <h2>🕒 Waiting List</h2>
-  <div class="section" id="waitingList"></div>
+  <div class="section" id="waitingSection">
+    <h1>Waiting List</h1>
+    <div id="waitingList"></div>
+  </div>
 
   <script src="shared.js"></script>
   <script>
@@ -73,13 +65,13 @@
 
       callouts.forEach((c, index) => {
         const div = document.createElement('div');
-        div.className = index === 0 ? 'callout' : 'waiting';
+        div.className = 'callout';
         div.innerHTML = `
           <strong>User:</strong> ${c.name}<br>
           <strong>Voice Channel:</strong> ${c.location}<br>
-          <strong>Time:</strong> ${c.time}
+          <strong>Time:</strong> ${c.time || '-'}
         `;
-        if (index === 0) {
+        if (c.status === 'active') {
           calloutsContainer.appendChild(div);
         } else {
           waitingContainer.appendChild(div);
@@ -100,4 +92,3 @@
   </script>
 </body>
 </html>
-
