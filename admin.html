@@ -2,99 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="shared.js"></script>
 </head>
-<body class="dark">
-  <div class="admin-container">
-    <h1>Callout Admin Panel</h1>
+<body style="background-color: #121212; color: #ffffff; font-family: Arial, sans-serif; padding: 20px;">
+  <h1>Callout Admin Panel</h1>
 
-    <div class="form">
-      <input type="text" id="user" placeholder="User" />
-      <input type="text" id="channel" placeholder="Voice Channel" />
-      <input type="text" id="time" placeholder="Time" />
-      <select id="target">
-        <option value="waiting">Send to Waiting</option>
-        <option value="active">Send to Active</option>
-      </select>
-      <button onclick="addCallout()">Callout</button>
-    </div>
+  <form id="calloutForm" style="margin-bottom: 20px;">
+    <input type="text" placeholder="User" id="user" required />
+    <input type="text" placeholder="Voice Channel" id="channel" required />
+    <input type="text" placeholder="Time" id="time" required />
+    <select id="status">
+      <option value="active">Active</option>
+      <option value="waiting">Waiting</option>
+    </select>
+    <button type="submit">Create Callout</button>
+  </form>
 
-    <div class="lists">
-      <div>
-        <h2>Active Callouts</h2>
-        <ul id="activeList"></ul>
-      </div>
-      <div>
-        <h2>Waiting Callouts</h2>
-        <ul id="waitingList"></ul>
-      </div>
-    </div>
+  <div style="margin-top: 30px;">
+    <h2>Manage Callouts</h2>
+    <div id="calloutList"></div>
   </div>
 
-  <script src="shared.js"></script>
   <script>
-    const activeList = document.getElementById("activeList");
-    const waitingList = document.getElementById("waitingList");
-
-    function renderLists() {
+    function renderList() {
       const { activeCallouts, waitingCallouts } = getCallouts();
+      const listDiv = document.getElementById("calloutList");
 
-      activeList.innerHTML = "";
-      activeCallouts.forEach((c, i) => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          ${c.user} - ${c.channel} - ${c.time}
-          <button onclick="moveCallout('active', ${i}, 'waiting')">⏩</button>
-          <button onclick="removeCallout('active', ${i})">❌</button>`;
-        activeList.appendChild(li);
-      });
+      function renderEntry(c, type) {
+        return `
+          <div style="margin: 10px 0; padding: 10px; background: #1e1e1e; border-left: 4px solid ${type === "active" ? "green" : "orange"};">
+            <strong>${c.user}</strong> - ${c.channel} - ${c.time}
+            <button onclick="removeCallout('${c.id}')">Remove</button>
+            <button onclick="moveCallout('${c.id}')">Move to ${type === "active" ? "Waiting" : "Active"}</button>
+          </div>
+        `;
+      }
 
-      waitingList.innerHTML = "";
-      waitingCallouts.forEach((c, i) => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          ${c.user} - ${c.channel} - ${c.time}
-          <button onclick="moveCallout('waiting', ${i}, 'active')">⏩</button>
-          <button onclick="removeCallout('waiting', ${i})">❌</button>`;
-        waitingList.appendChild(li);
-      });
+      listDiv.innerHTML =
+        "<h3>Active</h3>" + activeCallouts.map(c => renderEntry(c, "active")).join("") +
+        "<h3>Waiting</h3>" + waitingCallouts.map(c => renderEntry(c, "waiting")).join("");
     }
 
-    function addCallout() {
+    document.getElementById("calloutForm").addEventListener("submit", e => {
+      e.preventDefault();
       const user = document.getElementById("user").value;
       const channel = document.getElementById("channel").value;
       const time = document.getElementById("time").value;
-      const target = document.getElementById("target").value;
+      const status = document.getElementById("status").value;
 
-      if (!user || !channel || !time) return alert("Please fill all fields");
+      addCallout(user, channel, time, status);
+      document.getElementById("calloutForm").reset();
+      renderList();
+    });
 
-      const callouts = JSON.parse(localStorage.getItem("callouts") || "{}");
-      callouts[target] = callouts[target] || [];
-      callouts[target].push({ id: Date.now(), user, channel, time });
-      localStorage.setItem("callouts", JSON.stringify(callouts));
-      renderLists();
-    }
-
-    function removeCallout(type, index) {
-      const callouts = JSON.parse(localStorage.getItem("callouts") || "{}");
-      callouts[type].splice(index, 1);
-      localStorage.setItem("callouts", JSON.stringify(callouts));
-      renderLists();
-    }
-
-    function moveCallout(from, index, to) {
-      const callouts = JSON.parse(localStorage.getItem("callouts") || "{}");
-      const [moved] = callouts[from].splice(index, 1);
-      callouts[to] = callouts[to] || [];
-      callouts[to].push(moved);
-      localStorage.setItem("callouts", JSON.stringify(callouts));
-      renderLists();
-    }
-
-    renderLists();
-    setInterval(renderLists, 1000);
+    setInterval(renderList, 1000);
+    renderList();
   </script>
 </body>
 </html>
