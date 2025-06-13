@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+    }
+    form {
+      max-width: 400px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    input, button {
+      padding: 0.8rem;
+      font-size: 1rem;
+    }
+    .list {
+      margin-top: 2rem;
+      max-width: 500px;
+      margin-inline: auto;
+    }
+    .callout-item {
+      background: #fff;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .callout-item span {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Callout Admin Panel</h1>
+  <form id="calloutForm">
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="text" id="location" placeholder="Location" required />
+    <button type="submit">Call Out</button>
+  </form>
+
+  <div class="list" id="currentCallouts"></div>
+
+  <script src="shared.js"></script>
+  <script>
+    const form = document.getElementById('calloutForm');
+    const nameInput = document.getElementById('name');
+    const locationInput = document.getElementById('location');
+    const listDiv = document.getElementById('currentCallouts');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      addCallout(nameInput.value, locationInput.value);
+      nameInput.value = '';
+      locationInput.value = '';
+      renderList();
+    });
+
+    function renderList() {
+      const callouts = getCallouts();
+      listDiv.innerHTML = '';
+      callouts.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = 'callout-item';
+        div.innerHTML = `<span>${c.name} → ${c.location}</span> <button onclick="remove(${i})">Remove</button>`;
+        listDiv.appendChild(div);
+      });
+    }
+
+    function remove(index) {
+      removeCallout(index);
+      renderList();
+    }
+
+    renderList();
+  </script>
+</body>
+</html>
