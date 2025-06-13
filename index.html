@@ -15,45 +15,45 @@
     <div class="waiting-callouts"></div>
   </div>
 
-  <audio id="calloutSound" preload="auto">
-    <source src="sounds/callout.mp3" type="audio/mpeg" />
-  </audio>
-
   <script src="shared.js"></script>
-  <script>
-    let previousActiveIds = [];
+<script src="shared.js"></script>
+<script>
+  let previousActiveIds = [];
 
-    function renderCallouts() {
-      const activeContainer = document.querySelector(".active-callouts");
-      const waitingContainer = document.querySelector(".waiting-callouts");
-      const calloutSound = document.getElementById("calloutSound");
+  function renderCallouts() {
+    const activeContainer = document.querySelector(".active-callouts");
+    const waitingContainer = document.querySelector(".waiting-callouts");
+    const calloutSound = document.getElementById("calloutSound");
 
-      const { activeCallouts, waitingCallouts } = getCallouts();
-
-      const newIds = activeCallouts.map(c => c.id);
-      const newActive = newIds.filter(id => !previousActiveIds.includes(id));
-      if (newActive.length > 0) {
-        calloutSound.play().catch(() => {});
-      }
-      previousActiveIds = newIds;
-
-      activeContainer.innerHTML = '<h2>Active</h2>' +
-        activeCallouts.map(c => `
-          <div class="callout">
-            <strong>${c.user}</strong><br>
-            ${c.channel} - ${c.time}
-          </div>`).join('');
-
-      waitingContainer.innerHTML = '<h2>Waiting</h2>' +
-        waitingCallouts.map(c => `
-          <div class="callout">
-            <strong>${c.user}</strong><br>
-            ${c.channel} - ${c.time}
-          </div>`).join('');
+    if (calloutSound && !calloutSound.src.includes('callout.mp3')) {
+      calloutSound.src = "sounds/callout.mp3";
     }
 
-    setInterval(renderCallouts, 500);
-    renderCallouts();
-  </script>
+    const { activeCallouts, waitingCallouts } = getCallouts();
+
+    const newIds = activeCallouts.map(c => c.id);
+    const newActive = newIds.filter(id => !previousActiveIds.includes(id));
+    if (newActive.length > 0 && calloutSound) {
+      calloutSound.play().catch(() => {});
+    }
+    previousActiveIds = newIds;
+
+    activeContainer.innerHTML = '<h2>Active</h2>' +
+      activeCallouts.map(c => `<div class="callout">
+        <strong>${c.user}</strong><br>
+        ${c.channel} - ${c.time}
+      </div>`).join('');
+
+    waitingContainer.innerHTML = '<h2>Waiting</h2>' +
+      waitingCallouts.map(c => `<div class="callout">
+        <strong>${c.user}</strong><br>
+        ${c.channel} - ${c.time}
+      </div>`).join('');
+  }
+
+  setInterval(renderCallouts, 500);
+  renderCallouts();
+</script>
+
 </body>
 </html>
