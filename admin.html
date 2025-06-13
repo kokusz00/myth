@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel</title>
   <style>
     body {
@@ -10,44 +10,52 @@
       background: #f5f5f5;
       padding: 2rem;
     }
+
     h1 {
       text-align: center;
     }
+
     form {
-      max-width: 400px;
+      max-width: 500px;
       margin: auto;
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
+
     input, button {
       padding: 0.8rem;
       font-size: 1rem;
     }
+
     .list {
       margin-top: 2rem;
-      max-width: 500px;
+      max-width: 600px;
       margin-inline: auto;
     }
+
     .callout-item {
       background: #fff;
       padding: 1rem;
       margin: 0.5rem 0;
       display: flex;
       justify-content: space-between;
+      align-items: center;
       border: 1px solid #ccc;
       border-radius: 8px;
     }
+
     .callout-item span {
       font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Callout Admin Panel</h1>
+  <h1>📢 Callout Admin Panel</h1>
   <form id="calloutForm">
-    <input type="text" id="name" placeholder="Name" required />
-    <input type="text" id="location" placeholder="Location" required />
+    <input type="text" id="name" placeholder="User Name" required />
+    <input type="text" id="location" placeholder="Voice Channel" required />
+    <input type="text" id="time" placeholder="Time (e.g. 14:30)" required />
     <button type="submit">Call Out</button>
   </form>
 
@@ -56,15 +64,15 @@
   <script src="shared.js"></script>
   <script>
     const form = document.getElementById('calloutForm');
-    const nameInput = document.getElementById('name');
-    const locationInput = document.getElementById('location');
     const listDiv = document.getElementById('currentCallouts');
 
     form.addEventListener('submit', e => {
       e.preventDefault();
-      addCallout(nameInput.value, locationInput.value);
-      nameInput.value = '';
-      locationInput.value = '';
+      const name = document.getElementById('name').value;
+      const location = document.getElementById('location').value;
+      const time = document.getElementById('time').value;
+      addCallout(name, location, time);
+      form.reset();
       renderList();
     });
 
@@ -74,7 +82,10 @@
       callouts.forEach((c, i) => {
         const div = document.createElement('div');
         div.className = 'callout-item';
-        div.innerHTML = `<span>${c.name} → ${c.location}</span> <button onclick="remove(${i})">Remove</button>`;
+        div.innerHTML = `
+          <span>${c.name} → ${c.location} @ ${c.time}</span>
+          <button onclick="remove(${i})">Remove</button>
+        `;
         listDiv.appendChild(div);
       });
     }
@@ -88,3 +99,4 @@
   </script>
 </body>
 </html>
+
